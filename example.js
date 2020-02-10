@@ -45,13 +45,22 @@ async function main() {
 }
 
 async function read(resource) {
-	return require(`./tmp/${resource.ID}.json`)
+	let json = require(`./tmp/${resource.ID}.json`)
+	return {
+		ID: json.ID,
+		...json,
+		DeepObject: JSON.stringify(json)
+	}
 }
 
 async function create(resource) {
 	let obj = {
 		ID: (+new Date).toString(16),
 		...JSON.parse(resource.Payload),
+		aaa: "bbb",
+		debug: {
+			abc: 123
+		}
 	}
 	fs.writeFileSync(`./tmp/${obj.ID}.json`, JSON.stringify(obj, null, '\t'))
 	return read(obj)
@@ -61,6 +70,10 @@ async function update(resource) {
 	let obj = {
 		ID: resource.ID,
 		...JSON.parse(resource.Payload),
+		aaa: "bbb",
+		debug: {
+			abc: 123
+		}
 	}
 	fs.writeFileSync(`./tmp/${resource.ID}.json`, JSON.stringify(obj, null, '\t'))
 	return read(resource)

@@ -47,6 +47,11 @@ func resourceCustom() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+
+			"deep_object": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -69,15 +74,15 @@ func onDelete(d *schema.ResourceData, m interface{}) error {
 
 // RPCCommand - standart JSON struct for passing data in STDIN
 type RPCCommand struct {
-	ID      string `json:"ID,omitempty"`
-	Payload string `json:"Payload,omitempty"`
+	ID         string `json:"ID,omitempty"`
+	Payload    string `json:"Payload,omitempty"`
+	DeepObject string `json:"DeepObject,omitempty"`
 }
 
 func do(event string, d *schema.ResourceData, m interface{}) error {
 	log.Printf("Executing: %s %s %s %s", d.Get("executor"), d.Get("script"), event, d.Get("data"))
 
 	cmd := exec.Command(d.Get("executor").(string), d.Get("script").(string), event)
-
 
 	rpcCmd := RPCCommand{
 		ID:      d.Id(),
@@ -91,19 +96,38 @@ func do(event string, d *schema.ResourceData, m interface{}) error {
 	cmd.Stdin = bytes.NewReader([]byte(jsonStr))
 	result, err := cmd.Output()
 
+	if err != nil {
+		return err
+	}
+
 	if err == nil {
-		var resource map[string]interface{}
-		err = json.Unmarshal([]byte(result), &resource)
-		if err == nil {
-			if event == "delete" {
-				d.SetId("")
-			} else {
-				key := d.Get("id_key").(string)
-				d.Set("resource", resource)
-				d.SetId(resource[key].(string))
-			}
+		ret := RPCCommand{}
+		err := json.Unmarshal([]byte(result), &ret)
+		if err != nil {
+			return err
+		}
+		if event == "delete" {
+			d.SetId("")
+		} else {
+			d.SetId(ret.ID)
+			d.Set("deep_object", ret.DeepObject)
+			var resource map[string]interface{}
+			json.Unmarshal([]byte(result), &resource)
+			d.Set("resource", resource)
 		}
 	}
+
+	// var resource map[string]interface{}
+	// err = json.Unmarshal([]byte(result), &resource)
+	// if err == nil {
+	// 	if event == "delete" {
+	// 		d.SetId("")
+	// 	} else {
+	// 		key := d.Get("id_key").(string)
+	// 		d.Set("resource", resource)
+	// 		d.SetId(resource[key].(string))
+	// 	}
+	// }
 
 	return err
 }

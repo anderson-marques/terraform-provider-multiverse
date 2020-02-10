@@ -19,14 +19,14 @@ echo "PAYLOAD: '$PAYLOAD'" >> debug.txt
 
 read_resource() {
     echo "read_resource" >> debug.txt
-    cat tmp/$ID.json
+    echo $(cat tmp/$ID.json) $(cat tmp/$ID.json | jq '{DeepObject: . | tojson}') | jq -s add
 }
 
 create_resource() {
     echo "create_resource" >> debug.txt
     ID=$(date +"%s")
     echo "ID: '$ID'" >> debug.txt
-    JSON1=$(jq -n "{ID: \"$ID\"}")
+    JSON1=$(jq -n "{ID: \"$ID\", deep:{more:{here:123}}}")
     JSON2=$(jq -n "$PAYLOAD | fromjson")
     echo "$JSON1 $JSON2" | jq -s add > tmp/$ID.json
     read_resource
