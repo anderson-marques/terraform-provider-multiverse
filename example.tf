@@ -29,5 +29,5 @@ output "test_node" {
 }
 
 output "test_bash" {
-    value = multiverse_custom_resource.test_node
+    value = multiverse_custom_resource.test_bash
 }
