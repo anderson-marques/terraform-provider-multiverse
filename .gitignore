@@ -19,3 +19,9 @@ pkg/
 .idea/
 .terraform/
 terraform-provider-multiverse
+
+crash.log
+debug.txt
+
+terraform.tfstate
+terraform.tfstate.backup

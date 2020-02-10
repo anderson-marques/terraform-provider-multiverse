@@ -67,17 +67,28 @@ func onDelete(d *schema.ResourceData, m interface{}) error {
 	return do("delete", d, m)
 }
 
+// RPCCommand - standart JSON struct for passing data in STDIN
+type RPCCommand struct {
+	ID      string `json:"ID,omitempty"`
+	Payload string `json:"Payload,omitempty"`
+}
+
 func do(event string, d *schema.ResourceData, m interface{}) error {
 	log.Printf("Executing: %s %s %s %s", d.Get("executor"), d.Get("script"), event, d.Get("data"))
 
 	cmd := exec.Command(d.Get("executor").(string), d.Get("script").(string), event)
 
-	if event == "delete" {
-		cmd.Stdin = bytes.NewReader([]byte(d.Id()))
-	} else {
-		cmd.Stdin = bytes.NewReader([]byte(d.Get("data").(string)))
+
+	rpcCmd := RPCCommand{
+		ID:      d.Id(),
+		Payload: d.Get("data").(string),
 	}
 
+	jsonStr, err := json.Marshal(&rpcCmd)
+	if err != nil {
+		return err
+	}
+	cmd.Stdin = bytes.NewReader([]byte(jsonStr))
 	result, err := cmd.Output()
 
 	if err == nil {
