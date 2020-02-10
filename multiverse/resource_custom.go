@@ -3,9 +3,10 @@ package multiverse
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"os/exec"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceCustom() *schema.Resource {
